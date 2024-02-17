@@ -12,3 +12,4 @@ google-api-python-client==2.32.0
 google-cloud-vision==2.7.0
 cmake == 3.26.1
 PyOpenGL==3.1.5
+google.cloud.vision_v1 == 3.3.0
