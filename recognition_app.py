@@ -10,7 +10,7 @@ import io
 from io import BytesIO
 
 def initialize_client():
-    key_path = "path/to/your/service_account_key.json"
+    key_path = "https://github.com/Sagarnr1997/Image_app/blob/main/imapp.json?raw=true"
     credentials = service_account.Credentials.from_service_account_file(key_path)
     return vision.ImageAnnotatorClient(credentials=credentials)
 
