@@ -21,24 +21,29 @@ def recognize_faces(uploaded_file):
     """
     client = vision_v1.ImageAnnotatorClient()
 
-    # Convert the uploaded file to a PIL Image object
-    image = Image.open(io.BytesIO(uploaded_file.read()))
+    try:
+        # Convert the uploaded file to a PIL Image object
+        image = Image.open(io.BytesIO(uploaded_file.read()))
 
-    # Resize the image to reduce payload size
-    resized_image = image.resize((image.width // 2, image.height // 2))
-    img_byte_arr = resized_image.tobytes()
-    image_content = vision_v1.Image(content=img_byte_arr)
+        # Resize the image to reduce payload size
+        resized_image = image.resize((image.width // 2, image.height // 2))
+        img_byte_arr = resized_image.tobytes()
+        image_content = vision_v1.Image(content=img_byte_arr)
 
-    response = client.face_detection(image=image_content)
-    faces = response.face_annotations
+        response = client.face_detection(image=image_content)
+        faces = response.face_annotations
 
-    face_data = []
-    for face in faces:
-        vertices = face.bounding_poly.vertices
-        bounds = [{'x': vertex.x, 'y': vertex.y} for vertex in vertices]
-        face_data.append(bounds)
+        face_data = []
+        for face in faces:
+            vertices = face.bounding_poly.vertices
+            bounds = [{'x': vertex.x, 'y': vertex.y} for vertex in vertices]
+            face_data.append(bounds)
 
-    return face_data
+        return face_data
+    except Exception as e:
+        print(f"Error processing image: {e}")
+        return []
+
 # Function to retrieve image files from Google Drive
 def list_image_files():
     # Your code to list image files from Google Drive
