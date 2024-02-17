@@ -2,6 +2,7 @@ import streamlit as st
 from PIL import Image
 import os
 from google.oauth2 import service_account
+from google.cloud import vision
 from google.cloud import vision_v1
 from google.cloud.vision_v1  import types
 from googleapiclient.discovery import build
@@ -22,7 +23,7 @@ def recognize_faces(uploaded_file):
         image = Image.open(io.BytesIO(content))
 
         # Perform face detection
-        image_content = vision_v1.Image(content=content)
+        image_content = vision.Image(content=content)
         response = client.face_detection(image=image_content)
         faces = response.face_annotations
 
