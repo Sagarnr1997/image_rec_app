@@ -21,7 +21,7 @@ json_file_path = "imapp.json"
 
 # Download the JSON file if it does not exist
 if not os.path.exists(json_file_path):
-    url = "https://github.com/Sagarnr1997/Image_app/blob/main/new_imapp.json?raw=true"
+    url = "https://github.com/Sagarnr1997/Image_app/blob/main/imapp_new.json?raw=true"
     download_json_file(url, json_file_path)
 
 # Initialize the Google Cloud Vision client
