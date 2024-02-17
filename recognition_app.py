@@ -21,14 +21,20 @@ json_file_path = "imapp.json"
 
 # Download the JSON file if it does not exist
 if not os.path.exists(json_file_path):
-    url = "https://github.com/Sagarnr1997/Image_app/blob/main/imapp_new.json?raw=true"
+    url = "https://github.com/Sagarnr1997/Image_app/blob/main/new_imapp.json?raw=true"
     download_json_file(url, json_file_path)
 
 # Initialize the Google Cloud Vision client
 def initialize_client():
     try:
+        # Set up the service account credentials and project ID
         credentials = service_account.Credentials.from_service_account_file(json_file_path)
-        return vision.ImageAnnotatorClient(credentials=credentials)
+        project_id = "imapp-413619"
+
+        # Enable the Vision API for your project
+        client = vision.ImageAnnotatorClient(credentials=credentials, project=project_id)
+
+        return client
     except Exception as e:
         st.error(f"Error initializing client: {e}")
         return None
@@ -82,14 +88,12 @@ def main():
         if uploaded_file is not None:
             image = Image.open(uploaded_file)
             st.image(image, caption='Uploaded Image', use_column_width=True)
-            detected_faces = recognize_faces(uploaded_file, client)
+                        detected_faces = recognize_faces(uploaded_file, client)
             if detected_faces:
                 st.write("Detected Faces:")
-                st.json(detected_faces)
+                st.image(Image.open(detected_faces), caption='Detected Faces', use_column_width=True)
             else:
                 st.write("No faces detected in the uploaded image.")
-        else:
-            st.write("Please upload an image to recognize faces.")
     else:
         st.write("Failed to initialize client. Please check service account credentials and ensure billing is enabled.")
 
