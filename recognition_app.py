@@ -88,7 +88,7 @@ def main():
         if uploaded_file is not None:
             image = Image.open(uploaded_file)
             st.image(image, caption='Uploaded Image', use_column_width=True)
-                        detected_faces = recognize_faces(uploaded_file, client)
+            detected_faces = recognize_faces(uploaded_file, client)
             if detected_faces:
                 st.write("Detected Faces:")
                 st.image(Image.open(detected_faces), caption='Detected Faces', use_column_width=True)
