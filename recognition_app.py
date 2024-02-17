@@ -7,7 +7,6 @@ from google.cloud.vision_v1  import types
 from googleapiclient.discovery import build
 from io import BytesIO
 
-# Function to perform facial recognition using Google Cloud Vision API
 def recognize_faces(image):
     """
     Detect faces in the input image using Google Cloud Vision API.
@@ -20,11 +19,12 @@ def recognize_faces(image):
     """
     client = vision_v1.ImageAnnotatorClient()
 
-    with Image.open(image) as img:
-        img_byte_arr = img.tobytes()
-        image = vision_v1.Image(content=img_byte_arr)
+    # Resize the image to reduce payload size
+    resized_image = image.resize((image.width // 2, image.height // 2))
+    img_byte_arr = resized_image.tobytes()
+    image_content = vision_v1.Image(content=img_byte_arr)
 
-    response = client.face_detection(image=image)
+    response = client.face_detection(image=image_content)
     faces = response.face_annotations
 
     face_data = []
