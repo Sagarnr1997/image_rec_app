@@ -36,8 +36,36 @@ def initialize_client():
 # Function to recognize faces in an uploaded image using Google Cloud Vision API
 def recognize_faces(uploaded_file, client):
     try:
-        # Your face recognition code here
-        pass
+        # Read the content of the uploaded file
+        content = uploaded_file.read()
+
+        # Perform face detection
+        image_content = vision.Image(content=content)
+        response = client.face_detection(image=image_content)
+        faces = response.face_annotations
+
+        # Load the original image using PIL for drawing rectangles
+        image_pil = Image.open(io.BytesIO(content))
+        draw = ImageDraw.Draw(image_pil)
+
+        # Draw rectangles around detected faces
+        for face in faces:
+            vertices = face.bounding_poly.vertices
+            bounds = [(vertex.x, vertex.y) for vertex in vertices]
+            draw.rectangle(bounds, outline='red')
+
+            # Calculate the position for marking rectangle above the face
+            x, y = bounds[0][0], bounds[0][1]  # Top-left corner of the bounding box
+            width, height = bounds[1][0] - bounds[0][0], bounds[3][1] - bounds[0][1]
+
+            # Draw rectangle above the face
+            draw.rectangle([(x, y - 20), (x + width, y)], fill='red')
+            draw.text((x, y - 20), "Face", fill="white")
+
+        # Save the image with rectangles marked around faces
+        marked_image_path = 'marked_faces.jpg'
+        image_pil.save(marked_image_path)
+        return marked_image_path
     except Exception as e:
         st.error(f"Error processing image: {e}")
         return None
