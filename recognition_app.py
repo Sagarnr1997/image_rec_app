@@ -8,11 +8,31 @@ from google.cloud.vision_v1  import types
 from googleapiclient.discovery import build
 import io
 from io import BytesIO
+import requests
 
+# Function to download the JSON file from GitHub
+def download_json_file(url, output_path):
+    response = requests.get(url)
+    with open(output_path, 'wb') as json_file:
+        json_file.write(response.content)
+
+# Path to store the downloaded JSON file
+json_file_path = "imapp.json"
+
+# Download the JSON file if it does not exist
+if not os.path.exists(json_file_path):
+    url = "https://github.com/Sagarnr1997/Image_app/blob/main/imapp.json?raw=true"
+    download_json_file(url, json_file_path)
+
+# Authenticate Google Cloud Vision
 def initialize_client():
-    key_path = "https://github.com/Sagarnr1997/Image_app/blob/main/imapp.json?raw=true"
-    credentials = service_account.Credentials.from_service_account_file(key_path)
+    credentials = service_account.Credentials.from_service_account_file(json_file_path)
     return vision.ImageAnnotatorClient(credentials=credentials)
+
+# Authenticate Google Drive
+def authenticate_drive(json_file_path):
+    creds = service_account.Credentials.from_service_account_file(json_file_path, scopes=['https://www.googleapis.com/auth/drive'])
+    return creds
 
 # Function to recognize faces in an uploaded image using Google Cloud Vision API
 def recognize_faces(uploaded_file):
