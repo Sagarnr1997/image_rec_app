@@ -7,17 +7,21 @@ from google.cloud.vision_v1  import types
 from googleapiclient.discovery import build
 from io import BytesIO
 
-def recognize_faces(image):
+# Function to perform facial recognition using Google Cloud Vision API
+def recognize_faces(uploaded_file):
     """
     Detect faces in the input image using Google Cloud Vision API.
 
     Args:
-        image (PIL.Image): The input image as a PIL Image object.
+        uploaded_file (UploadedFile): The uploaded image file.
 
     Returns:
         list: List of dictionaries containing bounding box coordinates of detected faces.
     """
     client = vision_v1.ImageAnnotatorClient()
+
+    # Convert the uploaded file to a PIL Image object
+    image = Image.open(io.BytesIO(uploaded_file.read()))
 
     # Resize the image to reduce payload size
     resized_image = image.resize((image.width // 2, image.height // 2))
@@ -34,7 +38,6 @@ def recognize_faces(image):
         face_data.append(bounds)
 
     return face_data
-
 # Function to retrieve image files from Google Drive
 def list_image_files():
     # Your code to list image files from Google Drive
