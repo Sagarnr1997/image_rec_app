@@ -13,5 +13,5 @@ google-cloud-vision==2.7.0
 cmake == 3.26.1
 PyOpenGL==3.1.5
 mtcnn == 0.1.1
-0ubuntu1 == 22.04.1
+ubuntu1 == 22.04.1
 
