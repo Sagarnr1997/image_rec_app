@@ -10,38 +10,26 @@ import io
 from io import BytesIO
 import requests
 
-# Function to download the JSON file from GitHub
-def download_json_file(url, output_path):
-    response = requests.get(url)
-    with open(output_path, 'wb') as json_file:
-        json_file.write(response.content)
+# Path to the service account JSON file
+json_file_path = "https://github.com/Sagarnr1997/Image_app/blob/main/imapp.json?raw=true"  # Update with your file path
 
-# Path to store the downloaded JSON file
-json_file_path = "imapp.json"
-
-# Download the JSON file if it does not exist
-if not os.path.exists(json_file_path):
-    url = "https://github.com/Sagarnr1997/Image_app/blob/main/imapp.json?raw=true"
-    download_json_file(url, json_file_path)
-
-# Authenticate Google Cloud Vision
+# Initialize the Google Cloud Vision client
 def initialize_client():
-    credentials = service_account.Credentials.from_service_account_file(json_file_path)
-    return vision.ImageAnnotatorClient(credentials=credentials)
-
-# Authenticate Google Drive
-def authenticate_drive(json_file_path):
-    creds = service_account.Credentials.from_service_account_file(json_file_path, scopes=['https://www.googleapis.com/auth/drive'])
-    return creds
+    try:
+        credentials = service_account.Credentials.from_service_account_file(json_file_path)
+        return vision.ImageAnnotatorClient(credentials=credentials)
+    except Exception as e:
+        st.error(f"Error initializing client: {e}")
+        return None
 
 # Function to recognize faces in an uploaded image using Google Cloud Vision API
-def recognize_faces(uploaded_file):
+def recognize_faces(uploaded_file, client):
     try:
         # Read the content of the uploaded file
         content = uploaded_file.read()
 
         # Perform face detection
-        image_content = vision.Image(content=io.BytesIO(content).read())
+        image_content = vision.Image(content=content)
         response = client.face_detection(image=image_content)
         faces = response.face_annotations
 
@@ -68,48 +56,28 @@ def recognize_faces(uploaded_file):
         st.error(f"Error processing image: {e}")
         return None
 
-# Function to retrieve image files from Google Drive
-def list_image_files():
-    # Your code to list image files from Google Drive
-    pass
-
 # Main function
 def main():
-    global client
+    # Initialize the client
     client = initialize_client()
 
-    st.title("Face Recognition App")
-    uploaded_file = st.file_uploader("Choose an image...", type=["jpg", "jpeg", "png"])
+    if client is not None:
+        st.title("Face Recognition App")
+        uploaded_file = st.file_uploader("Choose an image...", type=["jpg", "jpeg", "png"])
 
-    if uploaded_file is not None:
-        image = Image.open(uploaded_file)
-        st.image(image, caption='Uploaded Image', use_column_width=True)
-        detected_faces = recognize_faces(uploaded_file)
-        if detected_faces:
-            st.write("Detected Faces:")
-            st.json(detected_faces)
-
-            # List image files from Google Drive
-            drive_images = list_image_files()
-
-            # Compare detected faces with faces from Google Drive
-            matching_images = []
-            for drive_image in drive_images:
-                # Your code to compare detected_faces with faces from Google Drive
-                # You may use facial recognition algorithms or other techniques
-                # to determine if a detected face matches a face in the drive
-                pass
-
-            if matching_images:
-                st.write("Matching Faces from Google Drive:")
-                for matching_image in matching_images:
-                    st.image(matching_image, caption='Matching Face', use_column_width=True)
+        if uploaded_file is not None:
+            image = Image.open(uploaded_file)
+            st.image(image, caption='Uploaded Image', use_column_width=True)
+            detected_faces = recognize_faces(uploaded_file, client)
+            if detected_faces:
+                st.write("Detected Faces:")
+                st.json(detected_faces)
             else:
-                st.write("No matching faces found in Google Drive.")
+                st.write("No faces detected in the uploaded image.")
         else:
-            st.write("No faces detected in the uploaded image.")
+            st.write("Please upload an image to recognize faces.")
     else:
-        st.write("Please upload an image to recognize faces.")
+        st.write("Failed to initialize client. Please check service account credentials and ensure billing is enabled.")
 
 if __name__ == "__main__":
     main()
