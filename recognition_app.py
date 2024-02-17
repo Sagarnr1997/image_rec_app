@@ -3,8 +3,7 @@ from PIL import Image
 import os
 from google.oauth2 import service_account
 from google.cloud import vision_v1
-from google-cloud-vision import google-cloud-vision_v1
-from google-cloud-vision_v1  import enums
+from google.cloud.vision_v1  import enums
 from googleapiclient.discovery import build
 from io import BytesIO
 
