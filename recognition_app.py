@@ -9,9 +9,10 @@ from googleapiclient.discovery import build
 import io
 from io import BytesIO
 
-# Function to perform facial recognition using Google Cloud Vision API
-# Initialize the Google Cloud Vision client
-client = vision.ImageAnnotatorClient()
+def initialize_client():
+    key_path = "path/to/your/service_account_key.json"
+    credentials = service_account.Credentials.from_service_account_file(key_path)
+    return vision.ImageAnnotatorClient(credentials=credentials)
 
 # Function to recognize faces in an uploaded image using Google Cloud Vision API
 def recognize_faces(uploaded_file):
@@ -54,6 +55,9 @@ def list_image_files():
 
 # Main function
 def main():
+    global client
+    client = initialize_client()
+
     st.title("Face Recognition App")
     uploaded_file = st.file_uploader("Choose an image...", type=["jpg", "jpeg", "png"])
 
