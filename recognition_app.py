@@ -1,5 +1,5 @@
 import streamlit as st
-from PIL import Image
+from PIL import Image, ImageDraw
 import os
 from google.oauth2 import service_account
 from google.cloud import vision
@@ -20,15 +20,18 @@ def recognize_faces(uploaded_file):
         content = uploaded_file.read()
 
         # Convert the uploaded file content to a PIL Image object
-        image = Image.open(io.BytesIO(content))
+        original_image = Image.open(io.BytesIO(content))
+
+        # Resize the image to reduce memory usage
+        resized_image = original_image.resize((original_image.width // 2, original_image.height // 2))
 
         # Perform face detection
-        image_content = vision.Image(content=content)
+        image_content = vision.Image(content=io.BytesIO(content).read())
         response = client.face_detection(image=image_content)
         faces = response.face_annotations
 
-        # Load the image using PIL for drawing rectangles
-        image_pil = Image.open(io.BytesIO(content))
+        # Load the resized image using PIL for drawing rectangles
+        image_pil = resized_image.copy()
         draw = ImageDraw.Draw(image_pil)
 
         # Draw rectangles around detected faces
@@ -48,9 +51,7 @@ def recognize_faces(uploaded_file):
         return marked_image_path
     except Exception as e:
         st.error(f"Error processing image: {e}")
-        st.error(f"Uploaded file: {uploaded_file}")
         return None
-
 # Function to retrieve image files from Google Drive
 def list_image_files():
     # Your code to list image files from Google Drive
