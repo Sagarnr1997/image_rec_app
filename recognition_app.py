@@ -9,37 +9,45 @@ import io
 from io import BytesIO
 
 # Function to perform facial recognition using Google Cloud Vision API
+# Initialize the Google Cloud Vision client
+client = vision.ImageAnnotatorClient()
+
+# Function to recognize faces in an uploaded image using Google Cloud Vision API
 def recognize_faces(uploaded_file):
-    # Read the content of the uploaded file
-    content = uploaded_file.read()
+    try:
+        # Read the content of the uploaded file
+        content = uploaded_file.read()
 
-    # Convert the uploaded file content to a PIL Image object
-    image = Image.open(io.BytesIO(content))
+        # Convert the uploaded file content to a PIL Image object
+        image = Image.open(io.BytesIO(content))
 
-    # Perform face detection
-    image_content = vision.Image(content=content)
-    response = client.face_detection(image=image_content)
-    faces = response.face_annotations
+        # Perform face detection
+        image_content = vision.Image(content=content)
+        response = client.face_detection(image=image_content)
+        faces = response.face_annotations
 
-    # Load the image using PIL for drawing rectangles
-    image_pil = Image.open(io.BytesIO(content))
-    draw = ImageDraw.Draw(image_pil)
+        # Load the image using PIL for drawing rectangles
+        image_pil = Image.open(io.BytesIO(content))
+        draw = ImageDraw.Draw(image_pil)
 
-    # Draw rectangles around detected faces
-    for face in faces:
-        vertices = face.bounding_poly.vertices
-        bounds = [(vertex.x, vertex.y) for vertex in vertices]
-        draw.rectangle(bounds, outline='red')
+        # Draw rectangles around detected faces
+        for face in faces:
+            vertices = face.bounding_poly.vertices
+            bounds = [(vertex.x, vertex.y) for vertex in vertices]
+            draw.rectangle(bounds, outline='red')
 
-        # Mark rectangle above the face
-        x, y = bounds[0]  # Top-left corner of the bounding box
-        draw.rectangle([(x, y - 20), (x + 100, y)], fill='red')
-        draw.text((x, y - 20), "Face", fill="white")
+            # Mark rectangle above the face
+            x, y = bounds[0]  # Top-left corner of the bounding box
+            draw.rectangle([(x, y - 20), (x + 100, y)], fill='red')
+            draw.text((x, y - 20), "Face", fill="white")
 
-    # Save the image with rectangles marked around faces
-    marked_image_path = 'marked_faces.jpg'
-    image_pil.save(marked_image_path)
-    return marked_image_path
+        # Save the image with rectangles marked around faces
+        marked_image_path = 'marked_faces.jpg'
+        image_pil.save(marked_image_path)
+        return marked_image_path
+    except Exception as e:
+        st.error(f"Error processing image: {e}")
+        return None
 
 # Function to retrieve image files from Google Drive
 def list_image_files():
