@@ -27,12 +27,15 @@ if not os.path.exists(json_file_path):
 # Initialize the Google Cloud Vision client
 def initialize_client():
     try:
-        # Set up the service account credentials and project ID
         credentials = service_account.Credentials.from_service_account_file(json_file_path)
-        project_id = "imapp-413619"
+        client = vision.ImageAnnotatorClient(credentials=credentials)
+        return client
+    except Exception as e:
+        st.error(f"Error initializing client: {e}")
+        return None
 
         # Enable the Vision API for your project
-        client = vision.ImageAnnotatorClient(credentials=credentials, project=project_id)
+        client = vision.ImageAnnotatorClient(credentials=credentials, project="imapp-413619")
 
         return client
     except Exception as e:
