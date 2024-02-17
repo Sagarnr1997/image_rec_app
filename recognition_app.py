@@ -9,96 +9,106 @@ from googleapiclient.discovery import build
 import io
 from io import BytesIO
 import requests
+import base64
+import tempfile
+from mtcnn import MTCNN
 
-# Function to download the JSON file from the given URL and store it locally
-def download_json_file(url, output_path):
-    response = requests.get(url)
-    with open(output_path, 'w') as json_file:
-        json_file.write(response.text)
+def recognize_faces(image_np):
+    # Initialize the MTCNN model
+    detector = MTCNN()
+    
+    # Detect faces in the image
+    faces = detector.detect_faces(image_np)
+    
+    # Draw rectangles around the faces
+    for face in faces:
+        x, y, w, h = face['box']
+        cv2.rectangle(image_np, (x, y), (x+w, y+h), (0, 255, 0), 2)
+        
+    return image_np
+
+# Function to display images and provide download option
+def display_images(images):
+    for image in images:
+        st.image(image, caption='Recognized Faces', use_column_width=True)
+        # Provide a download link for the image
+        st.markdown(get_image_download_link(image), unsafe_allow_html=True)
+
+# Function to generate a download link for an image
+def get_image_download_link(image):
+    buffered = BytesIO()
+    image.save(buffered, format="JPEG")
+    img_str = base64.b64encode(buffered.getvalue()).decode()
+    href = f'<a href="data:file/jpg;base64,{img_str}" download="recognized_face.jpg">Download image</a>'
+    return href
 
 # Path to store the downloaded JSON file
 json_file_path = "imapp.json"
 
 # Download the JSON file if it does not exist
 if not os.path.exists(json_file_path):
-    url = "https://github.com/Sagarnr1997/Image_app/blob/main/new_imapp.json?raw=true"
-    download_json_file(url, json_file_path)
+    url = "https://github.com/Sagarnr1997/Image_app/blob/main/imapp.json?raw=true"
+    response = requests.get(url)
+    with open(json_file_path, 'wb') as f:
+        f.write(response.content)
 
-# Initialize the Google Cloud Vision client
-def initialize_client():
-    try:
-        credentials = service_account.Credentials.from_service_account_file(json_file_path)
-        client = vision.ImageAnnotatorClient(credentials=credentials)
-        return client
-    except Exception as e:
-        st.error(f"Error initializing client: {e}")
-        return None
+# Authenticate with Google Drive API using the downloaded JSON file
+def authenticate():
+    creds = service_account.Credentials.from_service_account_file(json_file_path, scopes=['https://www.googleapis.com/auth/drive'])
+    return creds
 
-        # Enable the Vision API for your project
-        client = vision.ImageAnnotatorClient(credentials=credentials, project="imapp-413619")
+# List image files from Google Drive
+def list_image_files():
+    creds = authenticate()
+    service = build('drive', 'v3', credentials=creds)
+    results = service.files().list(
+        q="mimeType='image/jpeg' or mimeType='image/png'",
+        pageSize=10, fields="nextPageToken, files(id, name)").execute()
+    items = results.get('files', [])
+    image_files = []
+    if not items:
+        print('No image files found.')
+    else:
+        for item in items:
+            image_files.append(item['id'])
+    return image_files
 
-        return client
-    except Exception as e:
-        st.error(f"Error initializing client: {e}")
-        return None
-
-# Function to recognize faces in an uploaded image using Google Cloud Vision API
-def recognize_faces(uploaded_file, client):
-    try:
-        # Read the content of the uploaded file
-        content = uploaded_file.read()
-
-        # Perform face detection
-        image_content = vision.Image(content=content)
-        response = client.face_detection(image=image_content)
-        faces = response.face_annotations
-
-        # Load the original image using PIL for drawing rectangles
-        image_pil = Image.open(io.BytesIO(content))
-        draw = ImageDraw.Draw(image_pil)
-
-        # Draw rectangles around detected faces
-        for face in faces:
-            vertices = face.bounding_poly.vertices
-            bounds = [(vertex.x, vertex.y) for vertex in vertices]
-            draw.rectangle(bounds, outline='red')
-
-            # Calculate the position for marking rectangle above the face
-            x, y = bounds[0][0], bounds[0][1]  # Top-left corner of the bounding box
-            width, height = bounds[1][0] - bounds[0][0], bounds[3][1] - bounds[0][1]
-
-            # Draw rectangle above the face
-            draw.rectangle([(x, y - 20), (x + width, y)], fill='red')
-            draw.text((x, y - 20), "Face", fill="white")
-
-        # Save the image with rectangles marked around faces
-        marked_image_path = 'marked_faces.jpg'
-        image_pil.save(marked_image_path)
-        return marked_image_path
-    except Exception as e:
-        st.error(f"Error processing image: {e}")
-        return None
+# Get image data from Google Drive
+def get_image_from_drive(file_id):
+    creds = authenticate()
+    service = build('drive', 'v3', credentials=creds)
+    request = service.files().get_media(fileId=file_id)
+    image_data = request.execute()
+    image = Image.open(BytesIO(image_data))
+    return image
 
 # Main function
+# Main function
 def main():
-    # Initialize the client
-    client = initialize_client()
+    st.title("Face Recognition App")
+    uploaded_file = st.file_uploader("Choose an image...", type=["jpg", "jpeg", "png"])
 
-    if client is not None:
-        st.title("Face Recognition App")
-        uploaded_file = st.file_uploader("Choose an image...", type=["jpg", "jpeg", "png"])
-
-        if uploaded_file is not None:
-            image = Image.open(uploaded_file)
-            st.image(image, caption='Uploaded Image', use_column_width=True)
-            detected_faces = recognize_faces(uploaded_file, client)
-            if detected_faces:
-                st.write("Detected Faces:")
-                st.image(Image.open(detected_faces), caption='Detected Faces', use_column_width=True)
-            else:
-                st.write("No faces detected in the uploaded image.")
+    if uploaded_file is not None:
+        image = Image.open(uploaded_file)
+        image_np = np.array(image)  # Convert the image to a numpy array
+        modified_image = recognize_faces(image_np)  # Perform facial recognition and get the modified image
+        st.image(modified_image, caption='Uploaded Image with Recognized Faces', use_column_width=True)
     else:
-        st.write("Failed to initialize client. Please check service account credentials and ensure billing is enabled.")
+        st.write("Please upload an image to recognize faces.")
+
+    # Display recognized images from Google Drive
+    if st.button('Display Recognized Images'):
+        image_files = list_image_files()
+        images = []
+        for file_id in image_files:
+            image = get_image_from_drive(file_id)
+            faces_detected = recognize_faces(np.array(image))
+            if len(faces_detected) > 0:
+                images.append(image)
+        if images:
+            display_images(images)
+        else:
+            st.write("No faces detected in any of the images.")
 
 if __name__ == "__main__":
     main()
