@@ -5,6 +5,7 @@ from google.oauth2 import service_account
 from google.cloud import vision_v1
 from google.cloud.vision_v1  import types
 from googleapiclient.discovery import build
+import io
 from io import BytesIO
 
 # Function to perform facial recognition using Google Cloud Vision API
