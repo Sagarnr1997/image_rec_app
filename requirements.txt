@@ -13,5 +13,5 @@ google-cloud-vision==2.7.0
 cmake == 3.26.1
 PyOpenGL==3.1.5
 mtcnn == 0.1.1
-libgl1-mesa-glx == 21.2.6
+libgl1 == 1.0.0
 
