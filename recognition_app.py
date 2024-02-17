@@ -21,7 +21,6 @@ def recognize_faces(uploaded_file):
 
         # Convert the uploaded file content to a PIL Image object
         image = Image.open(io.BytesIO(content))
-        image.load()  # Ensure the image is fully loaded to check for validity
 
         # Perform face detection
         image_content = vision.Image(content=content)
@@ -49,8 +48,8 @@ def recognize_faces(uploaded_file):
         return marked_image_path
     except Exception as e:
         st.error(f"Error processing image: {e}")
+        st.error(f"Uploaded file: {uploaded_file}")
         return None
-
 
 # Function to retrieve image files from Google Drive
 def list_image_files():
