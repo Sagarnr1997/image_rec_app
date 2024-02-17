@@ -22,7 +22,7 @@ def recognize_faces(uploaded_file):
         image = Image.open(io.BytesIO(content))
 
         # Perform face detection
-        image_content = vision.Image(content=content)
+        image_content = vision_v1.Image(content=content)
         response = client.face_detection(image=image_content)
         faces = response.face_annotations
 
