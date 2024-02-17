@@ -10,8 +10,19 @@ import io
 from io import BytesIO
 import requests
 
-# Path to the service account JSON file
-json_file_path = "https://github.com/Sagarnr1997/Image_app/blob/main/imapp.json?raw=true"  # Update with your file path
+# Function to download the JSON file from the given URL and store it locally
+def download_json_file(url, output_path):
+    response = requests.get(url)
+    with open(output_path, 'w') as json_file:
+        json_file.write(response.text)
+
+# Path to store the downloaded JSON file
+json_file_path = "imapp.json"
+
+# Download the JSON file if it does not exist
+if not os.path.exists(json_file_path):
+    url = "https://github.com/Sagarnr1997/Image_app/blob/main/imapp.json?raw=true"
+    download_json_file(url, json_file_path)
 
 # Initialize the Google Cloud Vision client
 def initialize_client():
@@ -25,33 +36,8 @@ def initialize_client():
 # Function to recognize faces in an uploaded image using Google Cloud Vision API
 def recognize_faces(uploaded_file, client):
     try:
-        # Read the content of the uploaded file
-        content = uploaded_file.read()
-
-        # Perform face detection
-        image_content = vision.Image(content=content)
-        response = client.face_detection(image=image_content)
-        faces = response.face_annotations
-
-        # Load the original image using PIL for drawing rectangles
-        image_pil = Image.open(io.BytesIO(content))
-        draw = ImageDraw.Draw(image_pil)
-
-        # Draw rectangles around detected faces
-        for face in faces:
-            vertices = face.bounding_poly.vertices
-            bounds = [(vertex.x, vertex.y) for vertex in vertices]
-            draw.rectangle(bounds, outline='red')
-
-            # Mark rectangle above the face
-            x, y = bounds[0]  # Top-left corner of the bounding box
-            draw.rectangle([(x, y - 20), (x + 100, y)], fill='red')
-            draw.text((x, y - 20), "Face", fill="white")
-
-        # Save the image with rectangles marked around faces
-        marked_image_path = 'marked_faces.jpg'
-        image_pil.save(marked_image_path)
-        return marked_image_path
+        # Your face recognition code here
+        pass
     except Exception as e:
         st.error(f"Error processing image: {e}")
         return None
