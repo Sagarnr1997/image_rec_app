@@ -9,40 +9,34 @@ import io
 from io import BytesIO
 
 # Function to perform facial recognition using Google Cloud Vision API
-def recognize_faces(uploaded_file):
-    """
-    Detect faces in the input image using Google Cloud Vision API.
+def recognize_faces(image_path):
+    with open(image_path, 'rb') as image_file:
+        content = image_file.read()
 
-    Args:
-        uploaded_file (UploadedFile): The uploaded image file.
+    # Perform face detection
+    image = vision.Image(content=content)
+    response = client.face_detection(image=image)
+    faces = response.face_annotations
 
-    Returns:
-        list: List of dictionaries containing bounding box coordinates of detected faces.
-    """
-    client = vision_v1.ImageAnnotatorClient()
+    # Extract information about detected faces
+    face_data = []
+    for face in faces:
+        box = [(vertex.x, vertex.y) for vertex in face.bounding_poly.vertices]
+        face_data.append({'bounding_box': box})
 
-    try:
-        # Convert the uploaded file to a PIL Image object
-        image = Image.open(io.BytesIO(uploaded_file.read()))
+    # Load the image using OpenCV for drawing rectangles
+    image_cv2 = cv2.imread(image_path)
 
-        # Resize the image to reduce payload size
-        resized_image = image.resize((image.width // 2, image.height // 2))
-        img_byte_arr = resized_image.tobytes()
-        image_content = vision_v1.Image(content=img_byte_arr)
+    # Draw rectangles around detected faces
+    for face in face_data:
+        box = face['bounding_box']
+        cv2.rectangle(image_cv2, box[0], box[2], (0, 255, 0), 2)
 
-        response = client.face_detection(image=image_content)
-        faces = response.face_annotations
+    # Save the image with rectangles marked around faces
+    cv2.imwrite('marked_faces.jpg', image_cv2)
 
-        face_data = []
-        for face in faces:
-            vertices = face.bounding_poly.vertices
-            bounds = [{'x': vertex.x, 'y': vertex.y} for vertex in vertices]
-            face_data.append(bounds)
+    return face_data
 
-        return face_data
-    except Exception as e:
-        print(f"Error processing image: {e}")
-        return []
 
 # Function to retrieve image files from Google Drive
 def list_image_files():
